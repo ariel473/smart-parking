@@ -1,0 +1,19 @@
+services:
+  # Dashboard for the parking guard (Nginx)
+  web:
+    build: ./web
+    ports:
+      - "8080:80"        # host port 8080 -> port 80 inside the container
+    depends_on:
+      - storage          # start the storage server first
+
+  # Image storage server for the IoT camera (Apache)
+  storage:
+    build: ./storage
+    ports:
+      - "8081:80"        # the browser loads the images from here
+    volumes:
+      - plates:/usr/local/apache2/htdocs/plates   # images live in the volume and survive down/up
+
+volumes:
+  plates:                # named volume managed by Docker
