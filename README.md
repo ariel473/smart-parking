@@ -75,6 +75,6 @@ docker compose down
 
 | שם | אחריות |
 |---|---|
-| ✏️ (אריאל) | שרת האחסון (storage), ה-Volume, `docker-compose.yml`, תיעוד |
-| ✏️ (יואב) | לוח הבקרה (web), האלמנט האישי, ה-CI ב-GitHub Actions |
-| ✏️ (ליאם) | יוצר המצגת  |
+| אריאל | שרת האחסון (storage), ה-Volume, `docker-compose.yml`, תיעוד |
+| יואב | לוח הבקרה (web), האלמנט האישי, ה-CI ב-GitHub Actions |
+| ליאם | יוצר המצגת  |
