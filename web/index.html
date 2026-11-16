@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Parking – לוח בקרה</title>
+  <style>
+    body  { font-family: Arial, sans-serif; background: #eef1f5; margin: 0; padding: 24px; }
+    h1    { margin: 0 0 4px; }
+
+    /* מונה המקומות - האלמנט האישי שלנו */
+    .status  { background: #fff; border-radius: 10px; padding: 14px 16px; margin-top: 16px; max-width: 640px;
+               box-shadow: 0 1px 4px rgba(0,0,0,.15); box-sizing: border-box; }
+    .counter { font-size: 22px; font-weight: bold; }
+    .meter   { height: 12px; background: #dde2ea; border-radius: 99px; overflow: hidden; margin-top: 8px; }
+    .meter div      { height: 100%; width: 0; background: #16a34a; }   /* ירוק: יש מקום */
+    .meter div.full { background: #dc2626; }                           /* אדום: מלא */
+    .full-alert { display: none; margin-top: 12px; padding: 12px 16px; border-radius: 8px;
+                  background: #dc2626; color: #fff; font-size: 20px; font-weight: bold; }
+
+    /* כרטיסי הרכבים */
+    .cars { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; }
+    .car  { background: #fff; border-radius: 10px; padding: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.15);
+            max-width: 100%; box-sizing: border-box; }
+    .car img { width: 300px; max-width: 100%; display: block; border-radius: 6px; }
+    .car p   { margin: 8px 0 0; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Smart Parking – לוח בקרה לשומר</h1>
+  <p>רכבים שנכנסו לחניון, לפי תמונות מצלמת הכניסה. רכב חדש נכנס? רעננו את הדף (F5).</p>
+
+  <!-- האלמנט האישי שלנו: מונה מקומות והתראה כשהחניון מלא -->
+  <div class="status">
+    <div class="counter" id="counter">בודקים כמה רכבים יש בחניון...</div>
+    <div class="meter"><div id="meter-fill"></div></div>
+    <div class="full-alert" id="full-alert">⛔ החניון מלא! אין כניסה לרכבים נוספים.</div>
+  </div>
+
+  <!-- כאן יופיעו תמונות הרכבים. ה-JavaScript למטה מוסיף אותן לבד. -->
+  <div class="cars" id="cars"></div>
+
+  <script>
+    // התמונות נטענות משרת ה-Storage (Apache) דרך פורט 8081.
+    // הדפדפן הוא שטוען אותן, לכן הכתובת היא localhost ולא שם השירות "storage".
+    const STORAGE_URL = "http://localhost:8081/plates/";
+    const CAPACITY = 4;   // כמה מקומות חנייה יש בחניון
+
+    let carsFound = 0;    // כמה רכבים מצאנו עד עכשיו
+
+    // מנסה לטעון את car1.jpg, אחר כך car2.jpg, וכן הלאה.
+    // כשתמונה לא קיימת (השרת מחזיר 404), מבינים שאין עוד רכבים ועוצרים.
+    function loadCar(number) {
+      const img = new Image();
+      img.src = STORAGE_URL + "car" + number + ".jpg";
+
+      img.onload = function () {      // התמונה קיימת: מוסיפים כרטיס וממשיכים לרכב הבא
+        carsFound = carsFound + 1;
+        addCarCard(img, number);
+        updateCounter();
+        loadCar(number + 1);
+      };
+
+      img.onerror = function () {     // אין תמונה כזאת: סיימנו לספור
+        updateCounter();
+      };
+    }
+
+    // יוצר כרטיס של רכב (תמונה + כיתוב) ומוסיף אותו לדף
+    function addCarCard(img, number) {
+      img.alt = "רכב " + number;
+      const label = document.createElement("p");
+      label.textContent = "רכב " + number;
+
+      const card = document.createElement("div");
+      card.className = "car";
+      card.appendChild(img);
+      card.appendChild(label);
+      document.getElementById("cars").appendChild(card);
+    }
+
+    // מעדכן את המונה, את הפס הצבעוני ואת ההתראה
+    function updateCounter() {
+      const free = Math.max(CAPACITY - carsFound, 0);
+      const isFull = carsFound >= CAPACITY;
+
+      document.getElementById("counter").textContent =
+        carsFound + " מתוך " + CAPACITY + " מקומות תפוסים · מקומות פנויים: " + free;
+
+      const fill = document.getElementById("meter-fill");
+      fill.style.width = Math.min(carsFound / CAPACITY, 1) * 100 + "%";
+      fill.className = isFull ? "full" : "";
+
+      document.getElementById("full-alert").style.display = isFull ? "block" : "none";
+    }
+
+    loadCar(1);   // מתחילים מהרכב הראשון
+  </script>
+</body>
+</html>
